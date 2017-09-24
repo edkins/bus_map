@@ -12,20 +12,22 @@ import android.view.View;
  */
 
 public class TorontoMapView extends View {
+    private final MapPresentation presentation;
+
     public TorontoMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        MapData data = new MapData( context.getResources() );
+        presentation = new MapPresentation(data, bounds());
+    }
+
+    private MapPresentationBounds bounds() {
+        return new MapPresentationBounds(360,500);
     }
 
     @Override
     protected void onDraw(Canvas c)
     {
-        c.drawRect(new Rect(0,0,200,200), paint());
-        //c.drawRGB(255,128,0);
-    }
-
-    private Paint paint() {
-        Paint p = new Paint();
-        p.setColor(0xff456789);
-        return p;
+        presentation.draw(c);
     }
 }

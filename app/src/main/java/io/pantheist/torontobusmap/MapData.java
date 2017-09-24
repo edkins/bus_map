@@ -13,7 +13,7 @@ import java.util.zip.ZipInputStream;
 
 public class MapData {
 
-    MapDataShapes shapes;
+    public MapDataShapes shapes;
 
     public MapData(Resources resources)
     {
@@ -39,4 +39,5 @@ public class MapData {
             System.out.println(e);
         }
     }
+
 }

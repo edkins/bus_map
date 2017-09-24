@@ -26,4 +26,24 @@ public class MapDataShape {
         shape_pt_sequence = Integer.parseInt(record.get("shape_pt_sequence"));
         shape_dist_traveled = Float.parseFloat(record.get("shape_dist_traveled"));
     }
+
+    public float lat()
+    {
+        return shape_pt_lat;
+    }
+
+    public float lon()
+    {
+        return shape_pt_lon;
+    }
+
+    public MapBounds bounds()
+    {
+        return new MapBounds(shape_pt_lon,shape_pt_lat,shape_pt_lon,shape_pt_lat);
+    }
+
+    MapPresentationPoint presentationPoint(MapBounds mapBounds, MapPresentationBounds presentationBounds)
+    {
+        return mapBounds.scale(shape_pt_lon, shape_pt_lat, presentationBounds);
+    }
 }

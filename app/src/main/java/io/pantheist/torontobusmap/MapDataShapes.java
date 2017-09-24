@@ -15,7 +15,7 @@ import java.util.List;
  */
 
 public class MapDataShapes {
-    private List<MapDataShape> shapes;
+    public final List<MapDataShape> shapes;
 
     public MapDataShapes(InputStream inputStream)
     {
@@ -32,5 +32,15 @@ public class MapDataShapes {
         {
             System.out.println(e);
         }
+    }
+
+    public MapBounds bounds()
+    {
+        MapBounds result = null;
+        for (MapDataShape shape : shapes)
+        {
+            result = shape.bounds().expand(result);
+        }
+        return result;
     }
 }
