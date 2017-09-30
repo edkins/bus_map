@@ -2,7 +2,12 @@ import sys
 import json
 import random
 
-shapes = json.load(open(sys.argv[1]))
+def color(i):
+    colors = ['#000','#00f','#0f0','#0ff','#f00','#f0f','#ff0']
+    if i >= len(colors):
+        return colors[-1]
+    else:
+        return colors[i]
 
 class Bounds:
     def __init__(self):
@@ -28,20 +33,22 @@ class Point:
     def str(self):
         return str(self.x) + ',' + str(self.y)
 
+data = json.load(open(sys.argv[1]))
 print('<?xml version="1.0" encoding="UTF-8" ?>')
 print('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="2300" height="1500">')
 
 bounds = Bounds()
-for shape in shapes:
+for shape in data['paths']:
     string = ''
     points = shape['points']
     for point in points:
         string += bounds.scale(point).str() + ' '
     print('<polyline fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" points="%s"/>' % string)
-    p0 = bounds.scale(points[0])
-    print('<circle cx="%s" cy="%s" r="2" fill="blue"/>' % (p0.x, p0.y))
-    p0 = bounds.scale(points[-1])
-    print('<circle cx="%s" cy="%s" r="2" fill="blue"/>' % (p0.x, p0.y))
+
+for endpoint in data['endpoints']:
+    p0 = bounds.scale(endpoint)
+    col = color(len(endpoint['path_ids']))
+    print('<circle cx="%s" cy="%s" r="2" fill="%s"/>' % (p0.x, p0.y, col))
 
 print('</svg>')
 

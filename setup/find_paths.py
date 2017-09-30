@@ -117,11 +117,11 @@ def pairs(list):
 def reverse_shape(shape):
     return {'id':shape['id']+"'", 'points':list(reversed(shape['points']))}
 
-def to_shape(path,forward,reverse):
+def to_shape(path,forward,reverse,path_id):
     result = []
     for p in path:
         result.append({'lat':p[0], 'lon':p[1]})
-    return {'points':result,'forward_routes':forward,'reverse_routes':reverse}
+    return {'points':result,'forward_routes':forward,'reverse_routes':reverse,'path_id':path_id}
 
 def main():
     shapes = json.load(open(sys.argv[1]))
@@ -132,10 +132,12 @@ def main():
 
     paths = []
     encountered = set()
+    i = 0
     for shape in shapes:
         for (path,routeset) in info.split_shape(shape):
             if path not in encountered:
-                paths.append(to_shape(path, routeset.forward_routes(), routeset.reverse_routes()))
+                paths.append(to_shape(path, routeset.forward_routes(), routeset.reverse_routes(), str(i)))
+                i += 1
                 encountered.add(path)
                 encountered.add(tuple(reversed(path)))
 

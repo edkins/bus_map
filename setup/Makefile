@@ -1,5 +1,8 @@
-temp/m.svg: temp/paths.json Makefile mk_svg.py
+temp/m.svg: temp/endpoints.json Makefile mk_svg.py
 	python3 mk_svg.py $< > $@
+
+temp/endpoints.json: temp/paths.json Makefile find_endpoints.py
+	python3 find_endpoints.py $< > $@
 
 temp/paths.json: temp/shapes.json Makefile find_paths.py
 	python3 find_paths.py $< > $@
