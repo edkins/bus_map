@@ -1,5 +1,6 @@
 import sys
 import json
+import random
 
 shapes = json.load(open(sys.argv[1]))
 
@@ -33,9 +34,14 @@ print('<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="2300" height
 bounds = Bounds()
 for shape in shapes:
     string = ''
-    for point in shape['points']:
+    points = shape['points']
+    for point in points:
         string += bounds.scale(point).str() + ' '
     print('<polyline fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" points="%s"/>' % string)
+    p0 = bounds.scale(points[0])
+    print('<circle cx="%s" cy="%s" r="2" fill="blue"/>' % (p0.x, p0.y))
+    p0 = bounds.scale(points[-1])
+    print('<circle cx="%s" cy="%s" r="2" fill="blue"/>' % (p0.x, p0.y))
 
 print('</svg>')
 

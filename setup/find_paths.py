@@ -14,8 +14,13 @@ class Linelet:
     def reverse(self):
         return Linelet(self.lat1, self.lon1, self.lat0, self.lon0)
 
+    def p0(self):
+        return (self.lat0, self.lon0)
+    def p1(self):
+        return (self.lat1, self.lon1)
+
     def __eq__(self, other):
-        return self.lat0 == other.lat0 and self.lon0 == other.lon0 and self.lat1 == other.lat1 and self.lon1 == other.lon1
+        return isinstance(other, self.__class__) and self.lat0 == other.lat0 and self.lon0 == other.lon0 and self.lat1 == other.lat1 and self.lon1 == other.lon1
     def __ne__(self, other):
         return not (self == other)
     def __hash__(self):
@@ -26,8 +31,11 @@ class RoutePoint:
         self.route = route
         self.i = i
 
+    def next(self):
+        return RoutePoint(self.route, self.i + 1)
+
     def __eq__(self, other):
-        return self.route == other.route and self.i == other.i
+        return isinstance(other, self.__class__) and self.route == other.route and self.i == other.i
     def __ne__(self, other):
         return not (self == other)
     def __hash__(self):
@@ -39,6 +47,29 @@ class RouteSet:
 
     def add(self, route, i):
         self.set.add(RoutePoint(route, i))
+
+    def add_point(self, rp):
+        self.set.add(rp)
+
+    def next(self):
+        result = RouteSet()
+        for rp in self.set:
+            result.add_point(rp.next())
+        return result
+
+    def str(self):
+        return ','.join(sorted([rp.route for rp in self.set]))
+
+    def forward_routes(self):
+        return sorted([rp.route for rp in self.set if not rp.route.endswith("'")])
+
+    def reverse_routes(self):
+        return sorted([rp.route for rp in self.set if rp.route.endswith("'")])
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.set == other.set
+    def __ne__(self, other):
+        return not (self == other)
 
 class LineletInfo:
     def __init__(self):
@@ -56,10 +87,26 @@ class LineletInfo:
         length = len(points)-1
         for i in range(length):
             self.add_linelet(route, i, points[i], points[i+1])
-            self.add_linelet(route,-1-i, points[length-i], points[length-i-1])
 
     def linelets(self):
         return self.info.keys()
+
+    def split_shape(self, shape):
+        points = shape['points']
+        length = len(points)-1
+        routeset = None
+        paths = []
+        path = [(points[0]['lat'],points[0]['lon'])]
+        for i in range(length):
+            linelet = Linelet(points[i]['lat'], points[i]['lon'], points[i+1]['lat'], points[i+1]['lon'])
+            next_routeset = self.info[linelet]
+            if routeset != None and routeset.next() != next_routeset:
+                paths.append((tuple(path),routeset))
+                path = [linelet.p0()]
+            path.append(linelet.p1())
+            routeset = next_routeset
+        paths.append((tuple(path),routeset))
+        return paths
 
 def pairs(list):
     result = []
@@ -67,18 +114,30 @@ def pairs(list):
         result.append((list[i],list[i+1]))
     return result
 
+def reverse_shape(shape):
+    return {'id':shape['id']+"'", 'points':list(reversed(shape['points']))}
+
+def to_shape(path,forward,reverse):
+    result = []
+    for p in path:
+        result.append({'lat':p[0], 'lon':p[1]})
+    return {'points':result,'forward_routes':forward,'reverse_routes':reverse}
+
 def main():
     shapes = json.load(open(sys.argv[1]))
     info = LineletInfo()
     for shape in shapes:
         info.add_shape(shape)
+        info.add_shape(reverse_shape(shape))
 
     paths = []
     encountered = set()
-    for key in info.linelets():
-        if key not in encountered:
-            paths.append(key.shape())
-            encountered.add(key.reverse())
+    for shape in shapes:
+        for (path,routeset) in info.split_shape(shape):
+            if path not in encountered:
+                paths.append(to_shape(path, routeset.forward_routes(), routeset.reverse_routes()))
+                encountered.add(path)
+                encountered.add(tuple(reversed(path)))
 
     json.dump(paths, sys.stdout)
 
