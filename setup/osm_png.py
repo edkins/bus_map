@@ -23,9 +23,9 @@ data = json.load(open(sys.argv[1]))
 bounds = Bounds()
 
 width = 2000
-height = 1000
+height = 1500
 img = numpy.empty([height,width],'i4')
-proximity = numpy.empty([height,width],'i4')
+hidden = numpy.empty([height,width],'i4')
 
 node_ways = {}
 for way in data['ways']:
@@ -46,20 +46,39 @@ def scale_color(color, scale):
     scale = max(0, min(1, scale))
     return int(color[0] * scale) | int(color[1] * scale) << 8 | int(color[2] * scale) << 16 | 0xff000000
 
+nodes = {}
 for node in data['nodes']:
-    node_id = node['node_id']
-    node_color = color(node_ways[node_id])
-    p0 = bounds.scale(node)
-    x0 = int(p0[0])
-    y0 = int(p0[1])
-    for y in range(max(0,y0-10), min(height,y0+11)):
-        for x in range(max(0,x0-10), min(width,x0+11)):
-            prox = max(0, 100 - (x - x0) * (x - x0) - (y - y0) * (y - y0))
+    nodes[node['node_id']] = node
 
-            col = scale_color(node_color, prox / 100)
-            if prox > proximity[y][x]:
-                proximity[y][x] = prox
-                img[y][x] = col;
+for way in data['ways']:
+    color = [(255,0,0),(0,255,0),(0,0,255)][hash(way['name']) % 3]
+    color = scale_color(color,1)
+    node_ids = way['node_ids']
+    for i in range(len(node_ids)-1):
+        nid0 = node_ids[i]
+        nid1 = node_ids[i+1]
+        (x0,y0) = bounds.scale(nodes[nid0])
+        (x1,y1) = bounds.scale(nodes[nid1])
+        distance = int(max(abs(x0-x1),abs(y0-y1)))+1
+        for j in range(distance+1):
+            x = int((x0 * (distance-j) + x1 * j) / distance)
+            y = int((y0 * (distance-j) + y1 * j) / distance)
+            for y1 in range(y-1,y+2):
+                for x1 in range(x-1,x+2):
+                    if x1 >= 0 and x1 < width and y1 >= 0 and y1 < height:
+                        hidden[y1][x1] = color
+
+data2 = json.load(open(sys.argv[2]))
+for shape in data2['paths']:
+    for point in shape['points']:
+        p0 = bounds.scale(point)
+        x = int(p0[0])
+        y = int(p0[1])
+        if x >= 0 and x < width and y >= 0 and y < height:
+            if hidden[y][x] != 0:
+                img[y][x] = hidden[y][x]
+            else:
+                img[y][x] = 0xffffffff
 
 Image.fromarray(img, 'RGBA').show()
 
