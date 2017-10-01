@@ -45,6 +45,11 @@ for shape in data['paths']:
         string += bounds.scale(point).str() + ' '
     print('<polyline fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" points="%s"/>' % string)
 
+for shape in data['paths']:
+    for point in shape['points']:
+        p0 = bounds.scale(point)
+        print('<circle cx="%s" cy="%s" r="1" fill="black"/>' % (p0.x, p0.y))
+
 for endpoint in data['endpoints']:
     p0 = bounds.scale(endpoint)
     col = color(len(endpoint['path_ids']))

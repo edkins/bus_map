@@ -13,3 +13,9 @@ temp/shapes.json: temp/shapes.txt Makefile mk_json.py
 temp/shapes.txt: ../app/src/main/res/raw/opendata_ttc_schedules.zip Makefile
 	unzip -o $< shapes.txt -d temp
 	touch temp/shapes.txt
+
+temp/osm.json: ../data_source/openstreetmap.xml Makefile read_osm.py
+	python3 read_osm.py $< > $@
+
+temp/osm.svg: temp/osm.json Makefile osm_svg.py
+	python3 osm_svg.py $< > $@
