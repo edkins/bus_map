@@ -19,3 +19,6 @@ temp/osm.json: ../data_source/openstreetmap.xml Makefile read_osm.py
 
 temp/osm.svg: temp/osm.json Makefile osm_svg.py
 	python3 osm_svg.py $< > $@
+
+temp/osm.png: temp/osm.json Makefile osm_png.py
+	python3 osm_png.py $< > $@
